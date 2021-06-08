@@ -33,10 +33,8 @@ app.use((req, res, next) => {
 });
 // app.use(express.urlencoded)({extended:true});
 app.use(express.json());
-
-
-
-app.use("/api/sauce", stuffRoutes);
+app.use('/images', express.static('images'));
+app.use("/api/sauces", stuffRoutes);
 app.use("/api/auth", userRoutes);
 
 module.exports = app;
