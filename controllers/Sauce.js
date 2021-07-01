@@ -77,12 +77,12 @@ exports.addlike = (req, res, next) => {
             .then((sauce) => {
 
                 if (sauce.usersLiked.includes(userid)) {
-                    Sauce.updateOne({ _id: sauceid }, { $inc: { likes: 1 }, $pull: { usersliked: userid } }) //pas de valeur -1 sur un pull
+                    Sauce.updateOne({ _id: sauceid }, { $inc: { likes: -1 }, $pull: { usersLiked: userid } }) 
                         .then(() => res.status(200).json({ message: "Objet modifié !" }))
                         .catch((error) => res.status(400).json({ error }));
                 }
                 else if (sauce.usersDisliked.includes(userid)) {
-                    Sauce.updateOne({ _id: sauceid }, { $inc: { dislikes: 1 }, $pull: { usersDisliked: userid } })
+                    Sauce.updateOne({ _id: sauceid }, { $inc: { dislikes: -1 }, $pull: { usersDisliked: userid } })
                         .then(() => res.status(200).json({ message: "Objet modifié !" }))
                         .catch((error) => res.status(400).json({ error }));
                 }
