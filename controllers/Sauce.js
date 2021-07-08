@@ -61,23 +61,33 @@ exports.addlike = (req, res, next) => {
     let sauceid = req.params.id;
     let userid = req.body.userId;
     let likeStatusRequested = req.body.like;//-1=dislike 0=neutre 1=like
-    if (likeStatusRequested == 1) {
-        Sauce.updateOne({ _id: sauceid }, { $inc: { likes: 1 }, $push: { usersLiked: userid } })// rajout de luser a userliked
-            .then(() => res.status(200).json({ message: "Objet modifié !" }))
-            .catch((error) => res.status(400).json({ error }));
-    }
-    else if (likeStatusRequested == -1) {
-        Sauce.updateOne({ _id: sauceid }, { $inc: { dislikes: 1 }, $push: { usersDisliked: userid } })
-            .then(() => res.status(200).json({ message: "Objet modifié !" }))
-            .catch((error) => res.status(400).json({ error }));
+    Sauce.findOne({ _id: sauceid })
+        .then((sauce) => {
+            if (likeStatusRequested == 1) {
+                if (!sauce.usersLiked.includes(userid)) {
+                    Sauce.updateOne({ _id: sauceid }, { $inc: { likes: 1 }, $push: { usersLiked: userid } })// rajout de luser a userliked
+                        .then(() => res.status(200).json({ message: "Objet modifié !" }))
+                        .catch((error) => res.status(400).json({ error }));
+                }
+                else {
+                    res.status(404).json('deja like')
+                }
+            }
+            else if (likeStatusRequested == -1) {
+                if (!sauce.usersDisliked.includes(userid)) {
+                    Sauce.updateOne({ _id: sauceid }, { $inc: { dislikes: 1 }, $push: { usersDisliked: userid } })
+                        .then(() => res.status(200).json({ message: "Objet modifié !" }))
+                        .catch((error) => res.status(400).json({ error }));
+                }
+                else {
+                    res.status(404).json('deja unlike')
+                }
 
-    }
-    else if (likeStatusRequested == 0) {
-        Sauce.findOne({ _id: sauceid })
-            .then((sauce) => {
 
+            }
+            else if (likeStatusRequested == 0) {
                 if (sauce.usersLiked.includes(userid)) {
-                    Sauce.updateOne({ _id: sauceid }, { $inc: { likes: -1 }, $pull: { usersLiked: userid } }) 
+                    Sauce.updateOne({ _id: sauceid }, { $inc: { likes: -1 }, $pull: { usersLiked: userid } })
                         .then(() => res.status(200).json({ message: "Objet modifié !" }))
                         .catch((error) => res.status(400).json({ error }));
                 }
@@ -86,11 +96,13 @@ exports.addlike = (req, res, next) => {
                         .then(() => res.status(200).json({ message: "Objet modifié !" }))
                         .catch((error) => res.status(400).json({ error }));
                 }
-            })
-            .catch((error) => {
-                res.status(404).json({ error })}
-                );
-    }
+            }
+        })
+        .catch((error) => {
+            res.status(404).json({ error })
+        }
+        );
+
 
 
 
