@@ -2,6 +2,7 @@ const User = require("../models/user_models.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 var passwordValidator = require('password-validator');
+var CryptoJS = require("crypto-js");
 
 exports.signup = (req, res, next) => {
   var schema = new passwordValidator();
@@ -22,15 +23,18 @@ if(!schema.validate(req.body.password)){
 }
 
   bcrypt.hash(req.body.password, 10).then((hash) => {
-    const user = new User({ email: req.body.email, password: hash });
+    const encryptedEmail = getEncryptedString(req.body.email);
+    const user = new User({ email: encryptedEmail, password: hash });
     user
       .save()
       .then(() => res.status(201).json({ message: "Utilisateur crée !" }))
       .catch((error) => res.status(400).json({ error }));
   });
 };
+
 exports.login = (req, res, next) => {
-  User.findOne({ email: req.body.email })
+  const encryptedEmail = getEncryptedString(req.body.email);
+  User.findOne({ email: encryptedEmail })
     .then((user) => {
       if (!user) {
         return res.status(401).json({ error: "Utilisateur non trouvé !" });
@@ -52,3 +56,14 @@ exports.login = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
     
 };
+
+// https://www.npmjs.com/package/crypto-js
+function getEncryptedString(data) {
+  return  CryptoJS.AES.encrypt(data, process.env.CRYPTO_SECRET).toString();
+};
+
+function GetDecryptedString(encryptedData)
+{
+  var bytes  = CryptoJS.AES.decrypt(encryptedData, process.env.CRYPTO_SECRET);
+  var originalText = bytes.toString(CryptoJS.enc.Utf8);
+}
