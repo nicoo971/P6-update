@@ -34,11 +34,12 @@ app.use((req, res, next) => {
   next();
   
 });
+app.use(helmet());
 // app.use(express.urlencoded)({extended:true});
 app.use(express.json());
 app.use('/images', express.static('images'));
 app.use("/api/sauces", stuffRoutes);
 app.use("/api/auth", userRoutes);
-app.use(helmet);
+
 
 module.exports = app;

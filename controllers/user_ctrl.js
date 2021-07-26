@@ -2,7 +2,10 @@ const User = require("../models/user_models.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 var passwordValidator = require('password-validator');
-var CryptoJS = require("crypto-js");
+var crypto = require('crypto');
+
+
+
 
 exports.signup = (req, res, next) => {
   var schema = new passwordValidator();
@@ -21,9 +24,13 @@ schema
 if(!schema.validate(req.body.password)){
   return res.status(400).json({message: "majuscules et chiffre requis pour le mot de passe !" }); 
 }
+if(!validateEmail(req.body.email)){
+  return res.status(400).json({message: "email non valide" }); 
+}
 
   bcrypt.hash(req.body.password, 10).then((hash) => {
     const encryptedEmail = getEncryptedString(req.body.email);
+    console.log(encryptedEmail);
     const user = new User({ email: encryptedEmail, password: hash });
     user
       .save()
@@ -34,6 +41,7 @@ if(!schema.validate(req.body.password)){
 
 exports.login = (req, res, next) => {
   const encryptedEmail = getEncryptedString(req.body.email);
+  console.log(encryptedEmail);
   User.findOne({ email: encryptedEmail })
     .then((user) => {
       if (!user) {
@@ -59,11 +67,17 @@ exports.login = (req, res, next) => {
 
 // https://www.npmjs.com/package/crypto-js
 function getEncryptedString(data) {
-  return  CryptoJS.AES.encrypt(data, process.env.CRYPTO_SECRET).toString();
+
+  var mykey = crypto.createCipher('aes-128-cbc', process.env.CRYPTO_SECRET);
+  var mystr = mykey.update(data, 'utf8', 'hex')
+  mystr += mykey.final('hex');
+  
+  console.log(mystr);
+
+  return mystr;
 };
 
-function GetDecryptedString(encryptedData)
-{
-  var bytes  = CryptoJS.AES.decrypt(encryptedData, process.env.CRYPTO_SECRET);
-  var originalText = bytes.toString(CryptoJS.enc.Utf8);
+function validateEmail(email) {
+  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
 }
